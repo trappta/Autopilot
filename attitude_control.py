@@ -1,6 +1,6 @@
 import time
 import math
-import IMU
+import IMU.IMU as IMU
 import datetime
 import os
 import Adafruit_PCA9685
