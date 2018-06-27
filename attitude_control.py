@@ -242,5 +242,12 @@ class attitude_control(object):
 
         self.pwm.set_pwm(3, 0, rudder_pos)
 
+        #from attitude_control.py
+        #self.pwm.set_pwm(1, 0, rudder_pos)
+
+        #self.pwm.set_pwm(2, 0, elevator_pos)
+    
+        #self.pwm.set_pwm(3, 0, aileron_pos)
+
         #slow program down a bit, makes the output more readable
         #time.sleep(0.03)
