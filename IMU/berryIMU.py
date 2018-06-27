@@ -17,7 +17,7 @@
 import sys
 import time
 import math
-import IMU
+import IMU.IMU as IMU
 import datetime
 import os
 
@@ -181,7 +181,7 @@ while True:
 	b = datetime.datetime.now() - a
 	a = datetime.datetime.now()
 	LP = b.microseconds/(1000000*1.0)
-	print "Loop Time | %5.2f|" % ( LP ),
+	print("Loop Time | %5.2f|" % ( LP ),)
 	
 	
 	
@@ -258,9 +258,9 @@ while True:
 	mag_medianTable2Z.sort()
 
 	# The middle value is the value we are interested in
-	MAGx = mag_medianTable2X[MAG_MEDIANTABLESIZE/2];
-	MAGy = mag_medianTable2Y[MAG_MEDIANTABLESIZE/2];
-	MAGz = mag_medianTable2Z[MAG_MEDIANTABLESIZE/2];
+	MAGx = mag_medianTable2X[MAG_MEDIANTABLESIZE/2]
+	MAGy = mag_medianTable2Y[MAG_MEDIANTABLESIZE/2]
+	MAGz = mag_medianTable2Z[MAG_MEDIANTABLESIZE/2]
 
 
 
@@ -356,15 +356,15 @@ while True:
 
 
 	if 1:			#Change to '0' to stop showing the angles from the accelerometer
- 		print ("\033[1;34;40mACCX Angle %5.2f ACCY Angle %5.2f  \033[0m  " % (AccXangle, AccYangle)),
+		print ("\033[1;34;40mACCX Angle %5.2f ACCY Angle %5.2f  \033[0m  " % (AccXangle, AccYangle)),
 
 	if 1:			#Change to '0' to stop  showing the angles from the gyro
 		print ("\033[1;31;40m\tGRYX Angle %5.2f  GYRY Angle %5.2f  GYRZ Angle %5.2f" % (gyroXangle,gyroYangle,gyroZangle)),
 
- 	if 1:			#Change to '0' to stop  showing the angles from the complementary filter
+	if 1:			#Change to '0' to stop  showing the angles from the complementary filter
 		print ("\033[1;35;40m   \tCFangleX Angle %5.2f \033[1;36;40m  CFangleY Angle %5.2f \33[1;32;40m" % (CFangleX,CFangleY)),
 
- 	if 1:			#Change to '0' to stop  showing the heading
+	if 1:			#Change to '0' to stop  showing the heading
 		print ("HEADING  %5.2f \33[1;37;40m tiltCompensatedHeading %5.2f" % (heading,tiltCompensatedHeading)),
 
 	if 1:			#Change to '0' to stop  showing the angles from the Kalman filter
