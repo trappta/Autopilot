@@ -1,4 +1,4 @@
-# Main Mission Program
+#Main Mission Program
 #Step 1. Calibrate the Aircraft sensors. Perform once at beginning.
 #Step 2. Define a sequence of events (safe startup routine, takeoff, reach cruising altitude,
 #             fly waypoints, determine mission complete, land, safe shutdown)

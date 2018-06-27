@@ -26,7 +26,7 @@ import bmp280driver
 pwm = Adafruit_PCA9685.PCA9685()
 
 # Configure min and max servo pulse lengths
-throttle_servo_min = 250     # Min pulse length out of 4096
+throttle_servo_min = 250    # Min pulse length out of 4096
 throttle_servo_max = 500    # Max pulse length out of 4096
 rudder_servo_min = 250
 rudder_servo_max = 500
