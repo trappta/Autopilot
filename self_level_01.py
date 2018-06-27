@@ -26,14 +26,14 @@ import bmp280driver
 pwm = Adafruit_PCA9685.PCA9685()
 
 # Configure min and max servo pulse lengths
-throttle_servo_min = 250    # Min pulse length out of 4096
-throttle_servo_max = 500    # Max pulse length out of 4096
-rudder_servo_min = 250
-rudder_servo_max = 500
-aileron_servo_min = 250
-aileron_servo_max = 500
-elevator_servo_min = 250
-elevator_servo_max = 500
+throttle_servo_min = 275    # Min pulse length out of 4096
+throttle_servo_max = 450    # Max pulse length out of 4096
+rudder_servo_min = 275
+rudder_servo_max = 450
+aileron_servo_min = 275
+aileron_servo_max = 450
+elevator_servo_min = 275
+elevator_servo_max = 450
 
 RAD_TO_DEG = 57.29578
 M_PI = 3.14159265358979323846
@@ -240,7 +240,7 @@ while True:
     b = datetime.datetime.now() - a
     a = datetime.datetime.now()
     LP = b.microseconds/(1000000*1.0)
- #   print "Loop Time | %5.2f|" % ( LP ),
+    print("Loop Time | ", LP, " |")
 
 
     #Convert Gyro raw to degrees per second
@@ -249,7 +249,7 @@ while True:
     rate_gyr_z =  GYRz * G_GAIN
 
 
-    #Calculate the angles from the gyro. 
+    #Calculate the angles from the gyro.
     gyroXangle+=rate_gyr_x*LP
     gyroYangle+=rate_gyr_y*LP
     gyroZangle+=rate_gyr_z*LP
@@ -272,7 +272,7 @@ while True:
     CFangleX=AA*(CFangleX+rate_gyr_x*LP) +(1 - AA) * AccXangle
     CFangleY=AA*(CFangleY+rate_gyr_y*LP) +(1 - AA) * AccYangle
     CFangleZ=AA*(CFangleZ+rate_gyr_z*LP) +(1 - AA) * AccZangle
-    
+
     CFangleX_reading.append(CFangleX)
     del CFangleX_reading[0]
     CFangleX_filtered = sum(CFangleX_reading)/len(CFangleX_reading)
@@ -296,7 +296,7 @@ while True:
     accXnorm = ACCx/math.sqrt(ACCx * ACCx + ACCy * ACCy + ACCz * ACCz)
     accYnorm = ACCy/math.sqrt(ACCx * ACCx + ACCy * ACCy + ACCz * ACCz)
     accZnorm = ACCz/math.sqrt(ACCx * ACCx + ACCy * ACCy + ACCz * ACCz)
-    
+
     #Calculate pitch, roll and yaw
     pitch = math.asin(accXnorm)
     if pitch > 89:
@@ -322,7 +322,7 @@ while True:
 
     #Calculate altitude
     #altitude = 10^(log(10)*(pressure
-                               
+
     #if tiltCompensatedHeading < 0:
       #  tiltCompensatedHeading += 360
 

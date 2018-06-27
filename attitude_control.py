@@ -13,6 +13,9 @@ class attitude_control(object):
         # Initialise the PCA9685 using the default address (0x40).
         self.pwm = Adafruit_PCA9685.PCA9685()
 
+        # Set frequency to 60hz, good for servos.
+        self.pwm.set_pwm_freq(60)
+
         # Configure min and max servo pulse lengths
         self.throttle_servo_min = 275     # Min pulse length out of 4096
         self.throttle_servo_max = 450    # Max pulse length out of 4096
@@ -54,10 +57,18 @@ class attitude_control(object):
         self.tiltHeading_filtered = 0.0
         self.tiltHeading_reading = [0.0] * self.tiltHeading_filter_length
 
-        IMU.detectIMU()     #Detect if BerryIMUv1 or BerryIMUv2 is connected.
-        IMU.initIMU()       #Initialise the accelerometer, gyroscope and compass
+        self.time_a = datetime.datetime.now()
 
-        self.a = datetime.datetime.now()
+    # Helper function to make setting a servo pulse width simpler.
+    def set_servo_pulse(self, channel, pulse):
+        pulse_length = 1000000    # 1,000,000 us per second
+        pulse_length //= 60       # 60 Hz
+        print('{0}us per period'.format(pulse_length))
+        pulse_length //= 4096     # 12 bits of resolution
+        print('{0}us per bit'.format(pulse_length))
+        pulse *= 1000
+        pulse //= pulse_length
+        self.pwm.set_pwm(channel, 0, pulse)
 
     def attitude_control(self, heading_command, roll_command, pitch_command, X_offset, Y_offset, Z_offset, Head_offset, pressure):
 
@@ -74,31 +85,17 @@ class attitude_control(object):
         aileron_mid_pos = (self.aileron_servo_max + self.aileron_servo_min)/2
         elevator_mid_pos = (self.elevator_servo_max + self.elevator_servo_min)/2
 
-        # Helper function to make setting a servo pulse width simpler.
-        def set_servo_pulse(channel, pulse):
-            pulse_length = 1000000    # 1,000,000 us per second
-            pulse_length //= 60       # 60 Hz
-            print('{0}us per period'.format(pulse_length))
-            pulse_length //= 4096     # 12 bits of resolution
-            print('{0}us per bit'.format(pulse_length))
-            pulse *= 1000
-            pulse //= pulse_length
-            pwm.set_pwm(channel, 0, pulse)
-
-        # Set frequency to 60hz, good for servos.
-        self.pwm.set_pwm_freq(60)
-
-        self.pwm.set_pwm(0, 0, self.throttle_servo_min)
+        #self.pwm.set_pwm(0, 0, self.throttle_servo_min)
 
 #looooooooooooooooooooooooooop
 
-        ##Calculate loop Period(LP). How long between Gyro Reads
-        b = datetime.datetime.now() - self.a
-        self.a = datetime.datetime.now()
-        LP = b.microseconds/(1000000*1.0)
-        ##print "Loop Time | %5.2f|" % ( LP ),
+        #Calculate loop Period(dt). How long between Gyro Reads
+        time_b = datetime.datetime.now() - self.time_a
+        self.time_a = datetime.datetime.now()
+        dt = time_b.microseconds/(1000000*1.0)
+        print("Loop Time | ", dt, " |")
 
-        #Read the accelerometer,gyroscope and magnetometer values
+        #Read the accelerometer, gyroscope and magnetometer values
         ACCx = IMU.readACCx()
         ACCy = IMU.readACCy()
         ACCz = IMU.readACCz()
@@ -117,9 +114,9 @@ class attitude_control(object):
 
 
         #Calculate the angles from the gyro.
-        self.gyroXangle+=rate_gyr_x*LP
-        self.gyroYangle+=rate_gyr_y*LP
-        self.gyroZangle+=rate_gyr_z*LP
+        self.gyroXangle+=rate_gyr_x*dt
+        self.gyroYangle+=rate_gyr_y*dt
+        self.gyroZangle+=rate_gyr_z*dt
 
 
         #Convert Accelerometer values to degrees
@@ -136,9 +133,9 @@ class attitude_control(object):
             AccYangle += 90.0
 
         #Complementary filter used to combine the accelerometer and gyro values.
-        CFangleX=self.AA*(self.CFangleX+rate_gyr_x*LP) +(1 - self.AA) * AccXangle
-        CFangleY=self.AA*(self.CFangleY+rate_gyr_y*LP) +(1 - self.AA) * AccYangle
-        CFangleZ=self.AA*(self.CFangleZ+rate_gyr_z*LP) +(1 - self.AA) * AccZangle
+        CFangleX=self.AA*(self.CFangleX+rate_gyr_x*dt) +(1 - self.AA) * AccXangle
+        CFangleY=self.AA*(self.CFangleY+rate_gyr_y*dt) +(1 - self.AA) * AccYangle
+        CFangleZ=self.AA*(self.CFangleZ+rate_gyr_z*dt) +(1 - self.AA) * AccZangle
 
         self.CFangleX_reading.append(self.CFangleX)
         del self.CFangleX_reading[0]
@@ -166,7 +163,14 @@ class attitude_control(object):
 
         #Calculate pitch, roll and yaw
         pitch = math.asin(accXnorm)
-        roll = -math.asin(accYnorm/math.cos(pitch))
+        if pitch > 89:
+            pitch = 89
+        if pitch < -89:
+            pitch = -89
+        roll_intermediate = accYnorm/math.cos(pitch)
+        if abs(roll_intermediate) > 1.0:
+            roll_intermediate = 1.0
+        roll = -math.asin(roll_intermediate)
         yaw = math.asin(accZnorm)
 
         #Calculate the new tilt compensated values
@@ -187,7 +191,7 @@ class attitude_control(object):
         #    tiltCompensatedHeading += 360
 
         if 0:			#Change to '0' to stop showing pitch, roll, yaw, heading and tilt compensated heading
-            print ("\033[1;34;40m Pitch %5.2f Roll %5.2f Yaw %5.2f HEADING %5.2f TCH %5.2f \033[0m \n " % (pitch*180/M_PI, roll*180/M_PI, yaw*180/M_PI, heading, tiltCompensatedHeading)),
+            print ("\033[1;34;40m Pitch %5.2f Roll %5.2f Yaw %5.2f HEADING %5.2f TCH %5.2f \033[0m \n " % (pitch*180/self.M_PI, roll*180/self.M_PI, yaw*180/self.M_PI, heading, tiltCompensatedHeading)),
 
         if 0:			#Change to '0' to stop showing the raw values from the Compass
             print ("\033[1;34;40m MAGx %5.2f MAGy %5.2f MAGz %5.2f HEADING %5.2f TCH %5.2f \033[0m \n " % (MAGx, MAGy, MAGz, heading, tiltCompensatedHeading)),
@@ -196,10 +200,10 @@ class attitude_control(object):
             print ("\033[1;34;40mACCX Angle %5.2f ACCY Angle %5.2f  \033[0m  " % (AccXangle, AccYangle)),
 
         if 0:			#Change to '0' to stop  showing the angles from the gyro
-            print ("\033[1;31;40m\tGRYX Angle %5.2f  GYRY Angle %5.2f  GYRZ Angle %5.2f" % (gyroXangle,gyroYangle,gyroZangle)),
+            print ("\033[1;31;40m\tGRYX Angle %5.2f  GYRY Angle %5.2f  GYRZ Angle %5.2f" % (self.gyroXangle,self.gyroYangle,self.gyroZangle)),
 
         if 0:			#Change to '0' to stop  showing the angles from the complementary filter
-            print ("\033[1;35;40m   \tCFangleX Angle %5.2f \033[1;36;40m  CFangleY Angle %5.2f \33[1;32;40m" % (CFangleX_filtered,CFangleY_filtered)),
+            print ("\033[1;35;40m   \tCFangleX Angle %5.2f \033[1;36;40m  CFangleY Angle %5.2f \33[1;32;40m" % (self.CFangleX_filtered,self.CFangleY_filtered)),
 
         if 0:			#Change to '0' to stop  showing the heading
             print ("HEADING  %5.2f \33[1;37;40m tiltCompensatedHeading %5.2f" % (heading,tiltCompensatedHeading))
@@ -235,6 +239,8 @@ class attitude_control(object):
 
 
         #pwm.set_pwm(0, 0, throttle_servo_min+20)
+        rudder_pos = int(rudder_mid_pos)
+        throttle_pos = 250
 
         self.pwm.set_pwm(1, 0, aileron_pos)
 
@@ -242,12 +248,7 @@ class attitude_control(object):
 
         self.pwm.set_pwm(3, 0, rudder_pos)
 
-        #from attitude_control.py
-        #self.pwm.set_pwm(1, 0, rudder_pos)
-
-        #self.pwm.set_pwm(2, 0, elevator_pos)
-    
-        #self.pwm.set_pwm(3, 0, aileron_pos)
+        print("throttle %d rudder %d elevator %d aileron %d" % (throttle_pos, rudder_pos, elevator_pos, aileron_pos))
 
         #slow program down a bit, makes the output more readable
         #time.sleep(0.03)
