@@ -242,6 +242,8 @@ class attitude_control(object):
         rudder_pos = int(rudder_mid_pos)
         throttle_pos = 250
 
+        self.pwm.set_pwm(0, 0, throttle_pos)
+
         self.pwm.set_pwm(1, 0, aileron_pos)
 
         self.pwm.set_pwm(2, 0, elevator_pos)

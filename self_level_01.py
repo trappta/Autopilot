@@ -365,29 +365,29 @@ while True:
         aileron_pos = aileron_servo_min
     if (aileron_pos > aileron_servo_max):
         aileron_pos = aileron_servo_max
-    
+
     pitch_error = pitch_command - CFangleY_filtered + Y_offset
     elevator_pos = int(elevator_mid_pos - pitch_p_gain*pitch_error)
     if (elevator_pos < elevator_servo_min):
       elevator_pos = elevator_servo_min
     if (elevator_pos > elevator_servo_max):
       elevator_pos = elevator_servo_max
-        
+
 
     #pwm.set_pwm(0, 0, throttle_servo_min+20)
     rudder_pos = int(rudder_mid_pos)
     throttle_pos = 250
-    
+
     pwm.set_pwm(0, 0, throttle_pos)
 
     pwm.set_pwm(1, 0, aileron_pos)
 
     pwm.set_pwm(2, 0, elevator_pos)
-    
+
     pwm.set_pwm(3, 0, rudder_pos)
 
     print("throttle %d rudder %d elevator %d aileron %d" % (throttle_pos, rudder_pos, elevator_pos, aileron_pos))
-    
+
     #slow program down a bit, makes the output more readable
     #time.sleep(0.03)
 
