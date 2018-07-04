@@ -240,7 +240,7 @@ while True:
     b = datetime.datetime.now() - a
     a = datetime.datetime.now()
     LP = b.microseconds/(1000000*1.0)
-    print("Loop Time | ", LP, " |")
+    #print("Loop Time | ", LP, " |")
 
 
     #Convert Gyro raw to degrees per second
@@ -253,9 +253,9 @@ while True:
     gyroXangle+=rate_gyr_x*LP
     gyroYangle+=rate_gyr_y*LP
     gyroZangle+=rate_gyr_z*LP
-    print("self.gyroXangle: ", gyroXangle)
-    print("self.gyroYangle: ", gyroYangle)
-    print("self.gyroZangle: ", gyroZangle)
+    #print("gyroXangle: ", gyroXangle)
+    #print("gyroYangle: ", gyroYangle)
+    #print("gyroZangle: ", gyroZangle)
 
 
     #Convert Accelerometer values to degrees

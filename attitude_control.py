@@ -89,7 +89,7 @@ class attitude_control(object):
         time_b = datetime.datetime.now() - self.time_a
         self.time_a = datetime.datetime.now()
         dt = time_b.microseconds/(1000000*1.0)
-        print("Loop Time | ", dt, " |")
+        #print("Loop Time | ", dt, " |")
 
         #Read the accelerometer, gyroscope and magnetometer values
         ACCx = IMU.readACCx()
@@ -113,9 +113,9 @@ class attitude_control(object):
         self.gyroXangle+=rate_gyr_x*dt
         self.gyroYangle+=rate_gyr_y*dt
         self.gyroZangle+=rate_gyr_z*dt
-        print("self.gyroXangle: ", self.gyroXangle)
-        print("self.gyroYangle: ", self.gyroYangle)
-        print("self.gyroZangle: ", self.gyroZangle)
+        #print("self.gyroXangle: ", self.gyroXangle)
+        #print("self.gyroYangle: ", self.gyroYangle)
+        #print("self.gyroZangle: ", self.gyroZangle)
 
 
         #Convert Accelerometer values to degrees
@@ -215,12 +215,12 @@ class attitude_control(object):
         if (rudder_pos > rudder_servo_max):
             rudder_pos = rudder_servo_max
 
-        ##yaw_error = yaw_command + CFangleZ_filtered + Z_offset
-        ##rudder_pos = int(rudder_mid_pos - yaw_p_gain*yaw_error)
-        ##if (rudder_pos < rudder_servo_min):
-        ##    rudder_pos = rudder_servo_min
-        ##if (rudder_pos > rudder_servo_max):
-        ##    rudder_pos = rudder_servo_max
+        yaw_error = yaw_command + self.CFangleZ_filtered + Z_offset
+        rudder_pos = int(rudder_mid_pos - yaw_p_gain*yaw_error)
+        if (rudder_pos < rudder_servo_min):
+            rudder_pos = rudder_servo_min
+        if (rudder_pos > rudder_servo_max):
+            rudder_pos = rudder_servo_max
 
         roll_error = roll_command - self.CFangleX_filtered + X_offset
         aileron_pos = int(aileron_mid_pos + roll_p_gain*roll_error)
@@ -237,8 +237,8 @@ class attitude_control(object):
           elevator_pos = elevator_servo_max
 
 
-        rudder_pos = int(rudder_mid_pos)
-        throttle_pos = 250
+        #rudder_pos = int(rudder_mid_pos)
+        throttle_pos = int((throttle_servo_max-throttle_servo_min)*(float(throttle_command) / 100.0) + throttle_servo_min)
 
         self.pwm.set_pwm(0, 0, throttle_pos)
 
