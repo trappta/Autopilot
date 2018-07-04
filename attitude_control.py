@@ -8,6 +8,27 @@ import bmp280driver
 
 class attitude_control(object):
 
+    # ----- Constants -----
+
+    # Configure min and max servo pulse lengths
+    throttle_servo_min = 275     # Min pulse length out of 4096
+    throttle_servo_max = 450    # Max pulse length out of 4096
+    rudder_servo_min = 275
+    rudder_servo_max = 450
+    aileron_servo_min = 275
+    aileron_servo_max = 450
+    elevator_servo_min = 275
+    elevator_servo_max = 450
+
+    rudder_mid_pos = (rudder_servo_max + rudder_servo_min)/2
+    aileron_mid_pos = (aileron_servo_max + aileron_servo_min)/2
+    elevator_mid_pos = (elevator_servo_max + elevator_servo_min)/2
+
+    RAD_TO_DEG = 57.29578
+    M_PI = 3.14159265358979323846
+    G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
+    AA =  0.40      # Complementary filter constant
+
     def __init__(self):
 
         # Initialise the PCA9685 using the default address (0x40).
@@ -15,21 +36,6 @@ class attitude_control(object):
 
         # Set frequency to 60hz, good for servos.
         self.pwm.set_pwm_freq(60)
-
-        # Configure min and max servo pulse lengths
-        self.throttle_servo_min = 275     # Min pulse length out of 4096
-        self.throttle_servo_max = 450    # Max pulse length out of 4096
-        self.rudder_servo_min = 275
-        self.rudder_servo_max = 450
-        self.aileron_servo_min = 275
-        self.aileron_servo_max = 450
-        self.elevator_servo_min = 275
-        self.elevator_servo_max = 450
-
-        self.RAD_TO_DEG = 57.29578
-        self.M_PI = 3.14159265358979323846
-        self.G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
-        self.AA =  0.40      # Complementary filter constant
 
         self.gyroXangle = 0.0
         self.gyroYangle = 0.0
@@ -70,22 +76,12 @@ class attitude_control(object):
         pulse //= pulse_length
         self.pwm.set_pwm(channel, 0, pulse)
 
-    def attitude_control(self, heading_command, roll_command, pitch_command, X_offset, Y_offset, Z_offset, Head_offset, pressure):
-
-        # Specify commanded plane attitude
-        yaw_command = 0.0
-        throttle_command = 0.0
+    def attitude_control(self, heading_command, roll_command, pitch_command, yaw_command, throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure):
 
         heading_p_gain = 2.5
         yaw_p_gain = 5.0
         roll_p_gain = 5.0
         pitch_p_gain = 5.0
-
-        rudder_mid_pos = (self.rudder_servo_max + self.rudder_servo_min)/2
-        aileron_mid_pos = (self.aileron_servo_max + self.aileron_servo_min)/2
-        elevator_mid_pos = (self.elevator_servo_max + self.elevator_servo_min)/2
-
-        #self.pwm.set_pwm(0, 0, self.throttle_servo_min)
 
 #looooooooooooooooooooooooooop
 
@@ -108,21 +104,24 @@ class attitude_control(object):
         pressure = bmp280driver.readALT()
 
         #Convert Gyro raw to degrees per second
-        rate_gyr_x =  GYRx * self.G_GAIN
-        rate_gyr_y =  GYRy * self.G_GAIN
-        rate_gyr_z =  GYRz * self.G_GAIN
+        rate_gyr_x =  GYRx * G_GAIN
+        rate_gyr_y =  GYRy * G_GAIN
+        rate_gyr_z =  GYRz * G_GAIN
 
 
         #Calculate the angles from the gyro.
         self.gyroXangle+=rate_gyr_x*dt
         self.gyroYangle+=rate_gyr_y*dt
         self.gyroZangle+=rate_gyr_z*dt
+        print("self.gyroXangle: ", self.gyroXangle)
+        print("self.gyroYangle: ", self.gyroYangle)
+        print("self.gyroZangle: ", self.gyroZangle)
 
 
         #Convert Accelerometer values to degrees
-        AccXangle =  (math.atan2(ACCy,ACCz)+self.M_PI)*self.RAD_TO_DEG
-        AccYangle =  (math.atan2(ACCz,ACCx)+self.M_PI)*self.RAD_TO_DEG
-        AccZangle =  (math.atan2(ACCx,ACCy)+self.M_PI)*self.RAD_TO_DEG
+        AccXangle =  (math.atan2(ACCy,ACCz)+M_PI)*RAD_TO_DEG
+        AccYangle =  (math.atan2(ACCz,ACCx)+M_PI)*RAD_TO_DEG
+        AccZangle =  (math.atan2(ACCx,ACCy)+M_PI)*RAD_TO_DEG
 
         #convert the values to -180 and +180
         AccXangle -= 180.0
@@ -133,9 +132,9 @@ class attitude_control(object):
             AccYangle += 90.0
 
         #Complementary filter used to combine the accelerometer and gyro values.
-        CFangleX=self.AA*(self.CFangleX+rate_gyr_x*dt) +(1 - self.AA) * AccXangle
-        CFangleY=self.AA*(self.CFangleY+rate_gyr_y*dt) +(1 - self.AA) * AccYangle
-        CFangleZ=self.AA*(self.CFangleZ+rate_gyr_z*dt) +(1 - self.AA) * AccZangle
+        CFangleX=AA*(self.CFangleX+rate_gyr_x*dt) +(1 - AA) * AccXangle
+        CFangleY=AA*(self.CFangleY+rate_gyr_y*dt) +(1 - AA) * AccYangle
+        CFangleZ=AA*(self.CFangleZ+rate_gyr_z*dt) +(1 - AA) * AccZangle
 
         self.CFangleX_reading.append(self.CFangleX)
         del self.CFangleX_reading[0]
@@ -150,7 +149,7 @@ class attitude_control(object):
         self.CFangleZ_filtered = sum(self.CFangleZ_reading)/max(len(self.CFangleZ_reading),1)
 
         #Calculate heading
-        heading = 180 * math.atan2(MAGy,MAGx)/self.M_PI
+        heading = 180 * math.atan2(MAGy,MAGx)/M_PI
 
         #Only have our heading between 0 and 360
         #if heading < 0:
@@ -178,7 +177,7 @@ class attitude_control(object):
         magYcomp = MAGx*math.sin(roll)*math.sin(pitch)+MAGy*math.cos(roll)-MAGz*math.sin(roll)*math.cos(pitch)
 
         #Calculate tilt compensated heading
-        tiltCompensatedHeading = 180 * math.atan2(magYcomp,magXcomp)/self.M_PI
+        tiltCompensatedHeading = 180 * math.atan2(magYcomp,magXcomp)/M_PI
 
         self.tiltHeading_reading.append(tiltCompensatedHeading)
         del self.tiltHeading_reading[0]
@@ -191,7 +190,7 @@ class attitude_control(object):
         #    tiltCompensatedHeading += 360
 
         if 0:			#Change to '0' to stop showing pitch, roll, yaw, heading and tilt compensated heading
-            print ("\033[1;34;40m Pitch %5.2f Roll %5.2f Yaw %5.2f HEADING %5.2f TCH %5.2f \033[0m \n " % (pitch*180/self.M_PI, roll*180/self.M_PI, yaw*180/self.M_PI, heading, tiltCompensatedHeading)),
+            print ("\033[1;34;40m Pitch %5.2f Roll %5.2f Yaw %5.2f HEADING %5.2f TCH %5.2f \033[0m \n " % (pitch*180/M_PI, roll*180/M_PI, yaw*180/M_PI, heading, tiltCompensatedHeading)),
 
         if 0:			#Change to '0' to stop showing the raw values from the Compass
             print ("\033[1;34;40m MAGx %5.2f MAGy %5.2f MAGz %5.2f HEADING %5.2f TCH %5.2f \033[0m \n " % (MAGx, MAGy, MAGz, heading, tiltCompensatedHeading)),
@@ -211,10 +210,10 @@ class attitude_control(object):
 
         heading_error = heading_command - tiltHeading_filtered
         rudder_pos = int(rudder_mid_pos - heading_p_gain*heading_error)
-        if (rudder_pos < self.rudder_servo_min):
-            rudder_pos = self.rudder_servo_min
-        if (rudder_pos > self.rudder_servo_max):
-            rudder_pos = self.rudder_servo_max
+        if (rudder_pos < rudder_servo_min):
+            rudder_pos = rudder_servo_min
+        if (rudder_pos > rudder_servo_max):
+            rudder_pos = rudder_servo_max
 
         ##yaw_error = yaw_command + CFangleZ_filtered + Z_offset
         ##rudder_pos = int(rudder_mid_pos - yaw_p_gain*yaw_error)
@@ -225,20 +224,19 @@ class attitude_control(object):
 
         roll_error = roll_command - self.CFangleX_filtered + X_offset
         aileron_pos = int(aileron_mid_pos + roll_p_gain*roll_error)
-        if (aileron_pos < self.aileron_servo_min):
-            aileron_pos = self.aileron_servo_min
-        if (aileron_pos > self.aileron_servo_max):
-            aileron_pos = self.aileron_servo_max
+        if (aileron_pos < aileron_servo_min):
+            aileron_pos = aileron_servo_min
+        if (aileron_pos > aileron_servo_max):
+            aileron_pos = aileron_servo_max
 
         pitch_error = pitch_command - self.CFangleY_filtered + Y_offset
         elevator_pos = int(elevator_mid_pos - pitch_p_gain*pitch_error)
-        if (elevator_pos < self.elevator_servo_min):
-          elevator_pos = self.elevator_servo_min
-        if (elevator_pos > self.elevator_servo_max):
-          elevator_pos = self.elevator_servo_max
+        if (elevator_pos < elevator_servo_min):
+          elevator_pos = elevator_servo_min
+        if (elevator_pos > elevator_servo_max):
+          elevator_pos = elevator_servo_max
 
 
-        #pwm.set_pwm(0, 0, throttle_servo_min+20)
         rudder_pos = int(rudder_mid_pos)
         throttle_pos = 250
 

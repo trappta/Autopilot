@@ -36,41 +36,29 @@ pressure = X[4]
 heading_command = 0.0
 roll_command = 0.0
 pitch_command = 0.0
+yaw_command = 0.0
+throttle_command = 0.0
 print("start")
 for i in range(0,1000):
-    ac.attitude_control(heading_command,roll_command,pitch_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
-
-#time.sleep(5)
+    ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
 
 heading_command = 10.0
 roll_command = 10.0
 pitch_command = 10.0
 print("step 1")
 for i in range(0,1000):
-    ac.attitude_control(heading_command,roll_command,pitch_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
-
-#time.sleep(5)
+    ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
 
 heading_command = -10.0
 roll_command = -10.0
 pitch_command = -10.0
 print("step 2")
 for i in range(0,1000):
-    ac.attitude_control(heading_command,roll_command,pitch_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
-
-#time.sleep(5)
+    ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
 
 heading_command = 0.0
 roll_command = 0.0
 pitch_command = 0.0
 print("step 3")
 for i in range(0,1000):
-    ac.attitude_control(heading_command,roll_command,pitch_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
-
-#time.sleep(5)
-
-heading_command = 10.0
-roll_command = 10.0
-pitch_command = 10.0
-
-
+    ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
