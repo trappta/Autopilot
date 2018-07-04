@@ -6,28 +6,28 @@ import os
 import Adafruit_PCA9685
 import bmp280driver
 
+# ----- Constants -----
+
+# Configure min and max servo pulse lengths
+throttle_servo_min = 275     # Min pulse length out of 4096
+throttle_servo_max = 450    # Max pulse length out of 4096
+rudder_servo_min = 275
+rudder_servo_max = 450
+aileron_servo_min = 275
+aileron_servo_max = 450
+elevator_servo_min = 275
+elevator_servo_max = 450
+
+rudder_mid_pos = (rudder_servo_max + rudder_servo_min)/2
+aileron_mid_pos = (aileron_servo_max + aileron_servo_min)/2
+elevator_mid_pos = (elevator_servo_max + elevator_servo_min)/2
+
+RAD_TO_DEG = 57.29578
+M_PI = 3.14159265358979323846
+G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
+AA =  0.40      # Complementary filter constant
+
 class attitude_control(object):
-
-    # ----- Constants -----
-
-    # Configure min and max servo pulse lengths
-    throttle_servo_min = 275     # Min pulse length out of 4096
-    throttle_servo_max = 450    # Max pulse length out of 4096
-    rudder_servo_min = 275
-    rudder_servo_max = 450
-    aileron_servo_min = 275
-    aileron_servo_max = 450
-    elevator_servo_min = 275
-    elevator_servo_max = 450
-
-    rudder_mid_pos = (rudder_servo_max + rudder_servo_min)/2
-    aileron_mid_pos = (aileron_servo_max + aileron_servo_min)/2
-    elevator_mid_pos = (elevator_servo_max + elevator_servo_min)/2
-
-    RAD_TO_DEG = 57.29578
-    M_PI = 3.14159265358979323846
-    G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
-    AA =  0.40      # Complementary filter constant
 
     def __init__(self):
 
