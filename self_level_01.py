@@ -253,6 +253,9 @@ while True:
     gyroXangle+=rate_gyr_x*LP
     gyroYangle+=rate_gyr_y*LP
     gyroZangle+=rate_gyr_z*LP
+    print("self.gyroXangle: ", gyroXangle)
+    print("self.gyroYangle: ", gyroYangle)
+    print("self.gyroZangle: ", gyroZangle)
 
 
     #Convert Accelerometer values to degrees

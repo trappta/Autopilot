@@ -132,9 +132,9 @@ class attitude_control(object):
             AccYangle += 90.0
 
         #Complementary filter used to combine the accelerometer and gyro values.
-        CFangleX=AA*(self.CFangleX+rate_gyr_x*dt) +(1 - AA) * AccXangle
-        CFangleY=AA*(self.CFangleY+rate_gyr_y*dt) +(1 - AA) * AccYangle
-        CFangleZ=AA*(self.CFangleZ+rate_gyr_z*dt) +(1 - AA) * AccZangle
+        self.CFangleX=AA*(self.CFangleX+rate_gyr_x*dt) +(1 - AA) * AccXangle
+        self.CFangleY=AA*(self.CFangleY+rate_gyr_y*dt) +(1 - AA) * AccYangle
+        self.CFangleZ=AA*(self.CFangleZ+rate_gyr_z*dt) +(1 - AA) * AccZangle
 
         self.CFangleX_reading.append(self.CFangleX)
         del self.CFangleX_reading[0]
