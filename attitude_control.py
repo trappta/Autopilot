@@ -22,6 +22,13 @@ rudder_mid_pos = (rudder_servo_max + rudder_servo_min)/2
 aileron_mid_pos = (aileron_servo_max + aileron_servo_min)/2
 elevator_mid_pos = (elevator_servo_max + elevator_servo_min)/2
 
+# Proportional control gains
+p_gain = 4.0
+heading_p_gain = p_gain
+yaw_p_gain = p_gain
+roll_p_gain = p_gain
+pitch_p_gain = p_gain
+
 RAD_TO_DEG = 57.29578
 M_PI = 3.14159265358979323846
 G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
@@ -48,7 +55,7 @@ class attitude_control(object):
 
         # Moving average filter settings for Roll, Pitch, Yaw readings
 
-        self.combined_filter_length = 40
+        self.combined_filter_length = 100
         self.CFangleX_filter_length = self.combined_filter_length
         self.CFangleY_filter_length = self.combined_filter_length
         self.CFangleZ_filter_length = self.combined_filter_length
@@ -78,13 +85,6 @@ class attitude_control(object):
 
     def attitude_control(self, heading_command, roll_command, pitch_command, yaw_command, throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure):
 
-        heading_p_gain = 2.5
-        yaw_p_gain = 5.0
-        roll_p_gain = 5.0
-        pitch_p_gain = 5.0
-
-#looooooooooooooooooooooooooop
-
         #Calculate loop Period(dt). How long between Gyro Reads
         time_b = datetime.datetime.now() - self.time_a
         self.time_a = datetime.datetime.now()
@@ -107,7 +107,6 @@ class attitude_control(object):
         rate_gyr_x =  GYRx * G_GAIN
         rate_gyr_y =  GYRy * G_GAIN
         rate_gyr_z =  GYRz * G_GAIN
-
 
         #Calculate the angles from the gyro.
         self.gyroXangle+=rate_gyr_x*dt
@@ -136,9 +135,10 @@ class attitude_control(object):
         self.CFangleY=AA*(self.CFangleY+rate_gyr_y*dt) +(1 - AA) * AccYangle
         self.CFangleZ=AA*(self.CFangleZ+rate_gyr_z*dt) +(1 - AA) * AccZangle
 
+
         self.CFangleX_reading.append(self.CFangleX)
         del self.CFangleX_reading[0]
-        self.CFangleX_filtered = sum(self.CFangleX_reading)/len(self.CFangleX_reading)
+        self.CFangleX_filtered = sum(self.CFangleX_reading)/max(len(self.CFangleX_reading),1)
 
         self.CFangleY_reading.append(self.CFangleY)
         del self.CFangleY_reading[0]
@@ -236,19 +236,15 @@ class attitude_control(object):
         if (elevator_pos > elevator_servo_max):
           elevator_pos = elevator_servo_max
 
-
         #rudder_pos = int(rudder_mid_pos)
         throttle_pos = int((throttle_servo_max-throttle_servo_min)*(float(throttle_command) / 100.0) + throttle_servo_min)
-
         self.pwm.set_pwm(0, 0, throttle_pos)
-
         self.pwm.set_pwm(1, 0, aileron_pos)
-
         self.pwm.set_pwm(2, 0, elevator_pos)
+        #self.pwm.set_pwm(3, 0, rudder_pos)
+        self.pwm.set_pwm(3, 0, 375)  # steer straight for testing the takeoff.py profile
 
-        self.pwm.set_pwm(3, 0, rudder_pos)
-
-        print("throttle %d rudder %d elevator %d aileron %d" % (throttle_pos, rudder_pos, elevator_pos, aileron_pos))
+        #print("throttle %d rudder %d elevator %d aileron %d" % (throttle_pos, rudder_pos, elevator_pos, aileron_pos))
 
         #slow program down a bit, makes the output more readable
         #time.sleep(0.03)
