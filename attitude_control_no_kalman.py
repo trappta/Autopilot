@@ -29,23 +29,10 @@ yaw_p_gain = p_gain
 roll_p_gain = p_gain
 pitch_p_gain = p_gain
 
-IMU_upside_down = 0     # Change calculations depending on IMu orientation. 
-                        # 0 = Correct side up. This is when the skull logo is facing down
-                        # 1 = Upside down. This is when the skull logo is facing up
-
 RAD_TO_DEG = 57.29578
 M_PI = 3.14159265358979323846
 G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
 AA =  0.40      # Complementary filter constant
-MAG_LPF_FACTOR = 0.4 	# Low pass filter constant magnetometer
-ACC_LPF_FACTOR = 0.4 	# Low pass filter constant for accelerometer
-ACC_MEDIANTABLESIZE = 9    	# Median filter table size for accelerometer. Higher = smoother but a longer delay
-MAG_MEDIANTABLESIZE = 9    	# Median filter table size for magnetometer. Higher = smoother but a longer delay
-
-# More Kalman filter constants
-Q_angle = 0.02
-Q_gyro = 0.0015
-R_angle = 0.005
 
 class attitude_control(object):
 
@@ -63,21 +50,6 @@ class attitude_control(object):
         self.CFangleX = 0.0
         self.CFangleY = 0.0
         self.CFangleZ = 0.0
-
-        # Kalman filter variables
-        self.y_bias = 0.0
-        self.x_bias = 0.0
-        self.XP_00 = 0.0
-        self.XP_01 = 0.0
-        self.XP_10 = 0.0
-        self.XP_11 = 0.0
-        self.YP_00 = 0.0
-        self.YP_01 = 0.0
-        self.YP_10 = 0.0
-        self.YP_11 = 0.0
-        self.KFangleX = 0.0
-        self.KFangleY = 0.0
-
         self.pressure = 0.0
         self.altitude = 0.0
 
@@ -110,58 +82,6 @@ class attitude_control(object):
         pulse *= 1000
         pulse //= pulse_length
         self.pwm.set_pwm(channel, 0, pulse)
-
-    def kalmanFilterY ( accAngle, gyroRate, DT):
-        y=0.0
-        S=0.0
-
-        self.KFangleY = self.KFangleY + DT * (gyroRate - self.y_bias)
-
-        self.YP_00 = self.YP_00 + ( - DT * (self.YP_10 + self.YP_01) + Q_angle * DT )
-        self.YP_01 = self.YP_01 + ( - DT * self.YP_11 )
-        self.YP_10 = self.YP_10 + ( - DT * self.YP_11 )
-        self.YP_11 = self.YP_11 + ( + Q_gyro * DT )
-
-        y = accAngle - self.KFangleY
-        S = self.YP_00 + R_angle
-        K_0 = self.YP_00 / S
-        K_1 = self.YP_10 / S
-        
-        self.KFangleY = self.KFangleY + ( K_0 * y )
-        self.y_bias = self.y_bias + ( K_1 * y )
-        
-        self.YP_00 = self.YP_00 - ( K_0 * self.YP_00 )
-        self.YP_01 = self.YP_01 - ( K_0 * self.YP_01 )
-        self.YP_10 = self.YP_10 - ( K_1 * self.YP_00 )
-        self.YP_11 = self.YP_11 - ( K_1 * self.YP_01 )
-        
-        return self.KFangleY
-
-    def kalmanFilterX ( accAngle, gyroRate, DT):
-        x=0.0
-        S=0.0
-
-        self.KFangleX = self.KFangleX + DT * (gyroRate - self.x_bias)
-
-        self.XP_00 = self.XP_00 + ( - DT * (self.XP_10 + self.XP_01) + Q_angle * DT )
-        self.XP_01 = self.XP_01 + ( - DT * self.XP_11 )
-        self.XP_10 = self.XP_10 + ( - DT * self.XP_11 )
-        self.XP_11 = self.XP_11 + ( + Q_gyro * DT )
-
-        x = accAngle - self.KFangleX
-        S = self.XP_00 + R_angle
-        K_0 = self.XP_00 / S
-        K_1 = self.XP_10 / S
-        
-        self.KFangleX = KFangleX + ( K_0 * x )
-        self.x_bias = x_bias + ( K_1 * x )
-        
-        self.XP_00 = XP_00 - ( K_0 * XP_00 )
-        self.XP_01 = XP_01 - ( K_0 * XP_01 )
-        self.XP_10 = XP_10 - ( K_1 * XP_00 )
-        self.XP_11 = XP_11 - ( K_1 * XP_01 )
-        
-        return self.KFangleX
 
     def attitude_control(self, heading_command, roll_command, pitch_command, yaw_command, throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure):
 
