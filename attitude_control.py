@@ -40,8 +40,8 @@ G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to updat
 AA =  0.40      # Complementary filter constant
 MAG_LPF_FACTOR = 0.4 	# Low pass filter constant magnetometer
 ACC_LPF_FACTOR = 0.4 	# Low pass filter constant for accelerometer
-ACC_MEDIANTABLESIZE = 10    	# Median filter table size for accelerometer. Higher = smoother but a longer delay
-MAG_MEDIANTABLESIZE = 10    	# Median filter table size for magnetometer. Higher = smoother but a longer delay
+ACC_MEDIANTABLESIZE = 30    	# Median filter table size for accelerometer. Higher = smoother but a longer delay
+MAG_MEDIANTABLESIZE = 30    	# Median filter table size for magnetometer. Higher = smoother but a longer delay
 
 # More Kalman filter constants
 Q_angle = 0.02
@@ -355,9 +355,9 @@ class attitude_control(object):
         #del self.CFangleY_reading[0]
         #self.CFangleY_filtered = sum(self.CFangleY_reading)/max(len(self.CFangleY_reading),1)
 
-        #self.CFangleZ_reading.append(self.CFangleZ)
-        #del self.CFangleZ_reading[0]
-        #self.CFangleZ_filtered = sum(self.CFangleZ_reading)/max(len(self.CFangleZ_reading),1)
+        self.CFangleZ_reading.append(self.CFangleZ)
+        del self.CFangleZ_reading[0]
+        self.CFangleZ_filtered = sum(self.CFangleZ_reading)/max(len(self.CFangleZ_reading),1)
 
 
 
@@ -434,6 +434,8 @@ class attitude_control(object):
         if (rudder_pos > rudder_servo_max):
             rudder_pos = rudder_servo_max
 
+
+        #yaw_error = yaw_command + self.CFangleZ_filtered + Z_offset
         yaw_error = yaw_command + self.CFangleZ_filtered + Z_offset
         rudder_pos = int(rudder_mid_pos - yaw_p_gain*yaw_error)
         if (rudder_pos < rudder_servo_min):
@@ -441,14 +443,16 @@ class attitude_control(object):
         if (rudder_pos > rudder_servo_max):
             rudder_pos = rudder_servo_max
 
-        roll_error = roll_command - self.CFangleX_filtered + X_offset
+        #roll_error = roll_command - self.CFangleX_filtered + X_offset
+        roll_error = roll_command - self.kalmanX + X_offset
         aileron_pos = int(aileron_mid_pos + roll_p_gain*roll_error)
         if (aileron_pos < aileron_servo_min):
             aileron_pos = aileron_servo_min
         if (aileron_pos > aileron_servo_max):
             aileron_pos = aileron_servo_max
 
-        pitch_error = pitch_command - self.CFangleY_filtered + Y_offset
+        #pitch_error = pitch_command - self.CFangleY_filtered + Y_offset
+        pitch_error = pitch_command - self.kalmanY + Y_offset
         elevator_pos = int(elevator_mid_pos - pitch_p_gain*pitch_error)
         if (elevator_pos < elevator_servo_min):
           elevator_pos = elevator_servo_min
