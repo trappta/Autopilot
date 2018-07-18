@@ -37,7 +37,7 @@ pressure = X[4]
 throttle_command = 0
 throttle_increment = 10
 
-while throttle_command <= 100:
+while throttle_command < 100:
 
 	heading_command = 0.0
 	roll_command = 0.0
@@ -48,14 +48,14 @@ while throttle_command <= 100:
 		ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
 	throttle_command += throttle_increment
 
-while throttle_command > 0:
+while throttle_command >= 0:
 
 	heading_command = 0.0
 	roll_command = 0.0
 	pitch_command = 0.0
 	yaw_command = 0.0
 	print("throttle = ", throttle_command, "%")
-	for i in range(1000):
+	for i in range(500):
 		ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
 	throttle_command -= throttle_increment
 
