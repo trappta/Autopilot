@@ -463,6 +463,7 @@ class attitude_control(object):
         throttle_pos = int((throttle_servo_max-throttle_servo_min)*(float(throttle_command) / 100.0) + throttle_servo_min)
         self.pwm.set_pwm(0, 0, throttle_pos)
         self.pwm.set_pwm(1, 0, aileron_pos)
+#        self.pwm.set_pwm(1, 0, 450)
         self.pwm.set_pwm(2, 0, elevator_pos)
         #self.pwm.set_pwm(3, 0, rudder_pos)
         self.pwm.set_pwm(3, 0, 375)  # steer straight for testing the takeoff.py profile
