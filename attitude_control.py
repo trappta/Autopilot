@@ -1,6 +1,7 @@
 import time
 import math
 import IMU.IMU as IMU
+from IMU.LSM9DS1 import *
 import datetime
 import os
 import Adafruit_PCA9685
@@ -12,16 +13,16 @@ import bmp280driver
 throttle_servo_off = 275
 throttle_servo_min = 285
 throttle_servo_max = 450
-rudder_servo_min   = 275     # Min pulse length out of 4096
-rudder_servo_max   = 450     # Max pulse length out of 4096
+rudder_servo_min   = 250     # Min pulse length out of 4096
+rudder_servo_max   = 425     # Max pulse length out of 4096
 aileron_servo_min  = 275
 aileron_servo_max  = 450
-elevator_servo_min = 275
-elevator_servo_max = 450
+elevator_servo_min = 450
+elevator_servo_max = 275
 
-rudder_mid_pos = (rudder_servo_max + rudder_servo_min)/2
-aileron_mid_pos = (aileron_servo_max + aileron_servo_min)/2
-elevator_mid_pos = (elevator_servo_max + elevator_servo_min)/2
+rudder_mid_pos = int((rudder_servo_max + rudder_servo_min)/2)
+aileron_mid_pos = int((aileron_servo_max + aileron_servo_min)/2)
+elevator_mid_pos = int((elevator_servo_max + elevator_servo_min)/2)
 
 # Proportional control gains
 p_gain = 4.0
@@ -40,8 +41,8 @@ G_GAIN = 0.070  # [deg/s/LSB]  If you change the dps for gyro, you need to updat
 AA =  0.40      # Complementary filter constant
 MAG_LPF_FACTOR = 0.4 	# Low pass filter constant magnetometer
 ACC_LPF_FACTOR = 0.4 	# Low pass filter constant for accelerometer
-ACC_MEDIANTABLESIZE = 30    	# Median filter table size for accelerometer. Higher = smoother but a longer delay
-MAG_MEDIANTABLESIZE = 30    	# Median filter table size for magnetometer. Higher = smoother but a longer delay
+ACC_MEDIANTABLESIZE = 2    	# Median filter table size for accelerometer. Higher = smoother but a longer delay
+MAG_MEDIANTABLESIZE = 2    	# Median filter table size for magnetometer. Higher = smoother but a longer delay
 
 # More Kalman filter constants
 Q_angle = 0.02
@@ -58,12 +59,16 @@ class attitude_control(object):
         # Set frequency to 60hz, good for servos.
         self.pwm.set_pwm_freq(60)
 
+        IMU.detectIMU()
+
+        IMU.writeACC(LSM9DS1_CTRL_REG7_XL, 0b11100001)
+
         self.gyroXangle = 0.0
         self.gyroYangle = 0.0
         self.gyroZangle = 0.0
         self.CFangleX = 0.0
         self.CFangleY = 0.0
-        self.CFangleZ = 0.0 # Uneeded in new
+        self.CFangleZ = 0.0 # Uneeded in new?
         self.CFangleXFiltered = 0.0
         self.CFangleYFiltered = 0.0
         self.kalmanX = 0.0
@@ -108,7 +113,7 @@ class attitude_control(object):
 
         # Moving average filter settings for Roll, Pitch, Yaw readings
 
-        self.combined_filter_length = 100
+        self.combined_filter_length = 1
         self.CFangleX_filter_length = self.combined_filter_length
         self.CFangleY_filter_length = self.combined_filter_length
         self.CFangleZ_filter_length = self.combined_filter_length
@@ -345,6 +350,8 @@ class attitude_control(object):
         #Kalman filter used to combine the accelerometer and gyro values.
         self.kalmanY = self.kalmanFilterY(AccYangle, rate_gyr_y,dt)
         self.kalmanX = self.kalmanFilterX(AccXangle, rate_gyr_x,dt)
+        #self.kalmanY = self.kalmanFilterY(AccYangle, 0,dt)
+        #self.kalmanX = self.kalmanFilterX(AccXangle, 0,dt)
 
 
         #self.CFangleX_reading.append(self.CFangleX)
@@ -445,7 +452,7 @@ class attitude_control(object):
 
         #roll_error = roll_command - self.CFangleX_filtered + X_offset
         roll_error = roll_command - self.kalmanX + X_offset
-        aileron_pos = int(aileron_mid_pos + roll_p_gain*roll_error)
+        aileron_pos = int(aileron_mid_pos - roll_p_gain*roll_error)
         if (aileron_pos < aileron_servo_min):
             aileron_pos = aileron_servo_min
         if (aileron_pos > aileron_servo_max):
@@ -453,7 +460,7 @@ class attitude_control(object):
 
         #pitch_error = pitch_command - self.CFangleY_filtered + Y_offset
         pitch_error = pitch_command - self.kalmanY + Y_offset
-        elevator_pos = int(elevator_mid_pos - pitch_p_gain*pitch_error)
+        elevator_pos = int(elevator_mid_pos + pitch_p_gain*pitch_error)
         if (elevator_pos < elevator_servo_min):
           elevator_pos = elevator_servo_min
         if (elevator_pos > elevator_servo_max):
@@ -463,10 +470,9 @@ class attitude_control(object):
         throttle_pos = int((throttle_servo_max-throttle_servo_min)*(float(throttle_command) / 100.0) + throttle_servo_min)
         self.pwm.set_pwm(0, 0, throttle_pos)
         self.pwm.set_pwm(1, 0, aileron_pos)
-#        self.pwm.set_pwm(1, 0, 450)
         self.pwm.set_pwm(2, 0, elevator_pos)
         #self.pwm.set_pwm(3, 0, rudder_pos)
-        self.pwm.set_pwm(3, 0, 375)  # steer straight for testing the takeoff.py profile
+        self.pwm.set_pwm(3, 0, rudder_mid_pos)  # steer straight for testing the takeoff.py profile
 
         #print("throttle %d rudder %d elevator %d aileron %d" % (throttle_pos, rudder_pos, elevator_pos, aileron_pos))
 

@@ -1,8 +1,4 @@
-# Main Mission Program
-# Step 1. Calibrate the Aircraft sensors. Perform once at beginning.
-# Step 2. Define a sequence of events (safe startup routine, takeoff, reach cruising altitude,
-#             fly waypoints, determine mission complete, land, safe shutdown)
-# Step 2 calls attitude control.
+# Experimental takeoff program
 
 from __future__ import division
 import calibrate_sensors
@@ -50,17 +46,17 @@ heading_command = 0.0
 roll_command = 0.0
 pitch_command = 0.0
 yaw_command = 0.0
-throttle_command = 10
-print("start down runway at 50% throttle")
-for i in range(1000):
-    ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
+throttle_command = 50
+#print("start down runway at 50% throttle")
+#for i in range(1000):
+#    ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
 
 # increase to 100% throttle and pitch up
 heading_command = 0.0
 roll_command = 0.0
-pitch_command = 10.0
+pitch_command = -20.0
 yaw_command = 0.0
-throttle_command = 20
+throttle_command = 100
 print("increase to 100% throttle and pitch up 10 degrees")
 for i in range(2000):
     ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
@@ -70,7 +66,7 @@ heading_command = 0.0
 roll_command = 0.0
 pitch_command = 10.0
 yaw_command = 0.0
-throttle_command = 30
+throttle_command = 75
 print("reduce throttle to 75% and continue ascent")
 for i in range(1000):
     ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
@@ -80,7 +76,7 @@ heading_command = 0.0
 roll_command = 0.0
 pitch_command = 0.0
 yaw_command = 0.0
-throttle_command = 20
+throttle_command = 50
 print("reduce throttle to 50% and level off")
 for i in range(1000):
     ac.attitude_control(heading_command,roll_command,pitch_command,yaw_command,throttle_command, X_offset, Y_offset, Z_offset, Head_offset, pressure)
