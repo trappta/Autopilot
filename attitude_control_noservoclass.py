@@ -4,9 +4,8 @@ import IMU.IMU as IMU
 from IMU.LSM9DS1 import *
 import datetime
 import os
-#import Adafruit_PCA9685
+import Adafruit_PCA9685
 import bmp280driver
-import servo
 
 # ----- Constants -----
 
@@ -18,8 +17,8 @@ rudder_servo_min   = 250     # Min pulse length out of 4096
 rudder_servo_max   = 425     # Max pulse length out of 4096
 aileron_servo_min  = 275
 aileron_servo_max  = 450
-elevator_servo_min = 275
-elevator_servo_max = 450
+elevator_servo_min = 450
+elevator_servo_max = 275
 
 rudder_mid_pos = int((rudder_servo_max + rudder_servo_min)/2)
 aileron_mid_pos = int((aileron_servo_max + aileron_servo_min)/2)
@@ -55,15 +54,10 @@ class attitude_control(object):
     def __init__(self):
 
         # Initialise the PCA9685 using the default address (0x40).
-        #self.pwm = Adafruit_PCA9685.PCA9685()
+        self.pwm = Adafruit_PCA9685.PCA9685()
 
         # Set frequency to 60hz, good for servos.
-        #self.pwm.set_pwm_freq(60)
-
-        self.throttleServo = servo.Servo(0, throttle_servo_min, throttle_servo_max, false)
-        self.aileronServo  = servo.Servo(1, aileron_servo_min,  aileron_servo_max,  false)
-        self.elevatorServo = servo.Servo(2, elevator_servo_min, elevator_servo_max, true)
-        self.rudderServo   = servo.Servo(0, rudder_servo_min,   rudder_servo_max,   false)
+        self.pwm.set_pwm_freq(60)
 
         IMU.detectIMU()
 
@@ -473,13 +467,12 @@ class attitude_control(object):
           elevator_pos = elevator_servo_max
 
         #rudder_pos = int(rudder_mid_pos)
-        #throttle_pos = int((throttle_servo_max-throttle_servo_min)*(float(throttle_command) / 100.0) + throttle_servo_min)
-        #self.pwm.set_pwm(0, 0, throttle_pos)
-        throttleServo.set_servo_position(throttle_command)
-        #self.pwm.set_pwm(1, 0, aileron_pos)
-        #self.pwm.set_pwm(2, 0, elevator_pos)
+        throttle_pos = int((throttle_servo_max-throttle_servo_min)*(float(throttle_command) / 100.0) + throttle_servo_min)
+        self.pwm.set_pwm(0, 0, throttle_pos)
+        self.pwm.set_pwm(1, 0, aileron_pos)
+        self.pwm.set_pwm(2, 0, elevator_pos)
         #self.pwm.set_pwm(3, 0, rudder_pos)
-        #self.pwm.set_pwm(3, 0, rudder_mid_pos)  # steer straight for testing the takeoff.py profile
+        self.pwm.set_pwm(3, 0, rudder_mid_pos)  # steer straight for testing the takeoff.py profile
 
         #print("throttle %d rudder %d elevator %d aileron %d" % (throttle_pos, rudder_pos, elevator_pos, aileron_pos))
 
