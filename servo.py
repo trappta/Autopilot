@@ -34,14 +34,14 @@ class Servo:
     # Helper function to make setting a servo pulse width simpler.
     def set_servo_position(self, percent):
 
-        if (percent > 100)
+        if (percent > 100):
             percent = 100
-        if (percent < 0)
+        if (percent < 0):
             percent = 0
 
-        if (self.is_reversed)
+        if (self.is_reversed):
             pos = int((self.servo_max - self.servo_min)*((100 - float(percent)) / 100.0) + self.servo_min)
-        else
+        else:
             pos = int((self.servo_max - self.servo_min)*(float(percent) / 100.0) + self.servo_min)
 
         self.pwm.set_pwm(self.channel, 0, pos)
